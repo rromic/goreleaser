@@ -1,7 +1,7 @@
 # This is an example .goreleaser.yml file with some sensible defaults.
 # Make sure to check the documentation at https://goreleaser.com
 env:
-  - DOCKER_USER_REPO={{ if index .Env "DOCKER_USER_REPO"  }}{{ .Env.DOCKER_USER_REPO }}{{ else }}romic{{ end }}
+  - DOCKER_USER_REPO={{ if index .Env "DOCKER_USER_REPO"  }}{{ .Env.DOCKER_USER_REPO }}{{ else }}rromic{{ end }}
 before:
   hooks:
     # You may remove this if you don't use go modules.
@@ -15,10 +15,17 @@ builds:
       - linux
       - windows
       - darwin
+    goarch:
+      - amd64
+      - arm64
+      - 386
+    goamd64:
+      - v1
 dockers:
   - image_templates:
-      - "rromic/{{.ProjectName}}:{{ .Version }}-amd64"
+      - "{{.Env.DOCKER_USER_REPO}}/{{.ProjectName}}:{{ .Version }}-amd64"
     use: buildx
+    goamd64: 'v1'
     dockerfile: dockerfile
     build_flag_templates:
       - "--platform=linux/amd64"
@@ -27,7 +34,7 @@ dockers:
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
   - image_templates:
-      - "rromic/{{.ProjectName}}:{{ .Version }}-arm64v8"
+      - "{{.Env.DOCKER_USER_REPO}}/{{.ProjectName}}:{{ .Version }}-arm64v8"
     use: buildx
     goarch: arm64
     dockerfile: dockerfile
@@ -37,7 +44,23 @@ dockers:
       - "--label=org.opencontainers.image.title={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
-
+  - image_templates:
+      - "{{.Env.DOCKER_USER_REPO}}/{{.ProjectName}}:{{ .Version }}-i386"
+    use: buildx
+    goarch: 386
+    dockerfile: dockerfile
+    build_flag_templates:
+      - "--platform=linux/i386"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+#docker_manifests:
+#  - name_template: {{.ENV.DOCKER_USER_REPO}}/{{.ProjectName}}:{{ .Version }}
+#    image_templates:
+#      - {{.ENV.DOCKER_USER_REPO}}/{{.ProjectName}}:{{ .Version }}-amd64
+#      - {{.ENV.DOCKER_USER_REPO}}/{{.ProjectName}}:{{ .Version }}-arm64v8
+#      - {{.ENV.DOCKER_USER_REPO}}/{{.ProjectName}}:{{ .Version }}-i386
 archives:
   - replacements:
       darwin: Darwin
@@ -55,6 +78,9 @@ changelog:
     exclude:
       - '^docs:'
       - '^test:'
+source:
+  # https://goreleaser.com/customization/source/
+  enabled: true
 # modelines, feel free to remove those if you don't want/use them:
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
 # vim: set ts=2 sw=2 tw=0 fo=cnqoj
